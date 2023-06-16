@@ -1,0 +1,39 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
+
+// Definir el objeto de escaneo BLE
+BLEScan* pBLEScan;
+
+// Función para procesar los resultados del escaneo
+class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+    void onResult(BLEAdvertisedDevice advertisedDevice) {
+        Serial.printf("Dispositivo encontrado: %s\n", advertisedDevice.toString().c_str());
+    }
+};
+
+void setup() {
+  Serial.begin(115200);
+
+  // Crear un objeto de escaneo
+  BLEDevice::init("");
+  pBLEScan = BLEDevice::getScan();
+
+  // Configurar el objeto de devolución de llamada para procesar los resultados del escaneo
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+
+  // Configurar el filtro de potencia de señal (opcional)
+  // pBLEScan->setRSSI(-80);
+
+  // Iniciar el escaneo
+  pBLEScan->start(0);
+}
+
+void loop() {
+  // Escanear durante 5 segundos y luego detener el escaneo
+  delay(5000);
+  pBLEScan->stop();
+  delay(2000);
+  pBLEScan->start(0);
+}
