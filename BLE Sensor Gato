@@ -1,0 +1,63 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
+
+#define LED_PIN 5 // Pin del LED
+
+// Definir el objeto de escaneo BLE
+BLEScan* pBLEScan;
+
+// Variable para controlar el estado del LED
+bool gatoDetectado = false;
+
+// Declaración de la clase MyAdvertisedDeviceCallbacks
+class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+    void onResult(BLEAdvertisedDevice advertisedDevice) {
+        // Obtener la dirección MAC del dispositivo anunciado
+        std::string direccionMAC = advertisedDevice.getAddress().toString();
+
+        if (direccionMAC == "d4:d9:a2:36:0a:9f") {
+            if (!gatoDetectado) {
+                gatoDetectado = true;
+                Serial.println("Gato detectado");
+
+                // Realizar encendido y apagado del LED 10 veces
+                for (int i = 0; i < 10; i++) {
+                    digitalWrite(LED_PIN, HIGH);
+                    delay(500);
+                    digitalWrite(LED_PIN, LOW);
+                    delay(500);
+                }
+            }
+        } else {
+            gatoDetectado = false;
+        }
+    }
+};
+
+void setup() {
+    Serial.begin(115200);
+    pinMode(LED_PIN, OUTPUT);
+
+    // Crear un objeto de escaneo
+    BLEDevice::init("");
+    pBLEScan = BLEDevice::getScan();
+
+    // Configurar el objeto de devolución de llamada para procesar los resultados del escaneo
+    pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+
+    // Configurar el filtro de potencia de señal (opcional)
+    // pBLEScan->setRSSI(-80);
+
+    // Iniciar el escaneo
+    pBLEScan->start(0);
+}
+
+void loop() {
+    // Escanear durante 5 segundos y luego detener el escaneo
+    delay(5000);
+    pBLEScan->stop();
+    delay(2000);
+    pBLEScan->start(0);
+}
